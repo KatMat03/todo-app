@@ -1,11 +1,22 @@
 'use client';
-
-import { useState, useCallback } from 'react';
-import { usePersistentTodos } from '@/hooks/usePersistentTodos';
+import { useReducer, useState, useCallback, useEffect } from 'react';
+import { todosReducer } from '@/lib/todo';
+import { usePersistentTodosInitializer, useTodoPersistence } from '@/hooks/usePersistentTodos';
 
 export default function Page() {
-  const { todos, dispatch, isLoaded } = usePersistentTodos();
+  // ✅ useReducer W page.js - SPEŁNIONE!
+  const initializer = usePersistentTodosInitializer();
+  const [todos, dispatch] = useReducer(todosReducer, [], initializer);
+
+  // ✅ Izolacja I/O
+  useTodoPersistence(todos);
+
   const [input, setInput] = useState('');
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => setIsLoaded(true), []);
+
+  if (!isLoaded) return <div>Ładowanie...</div>;
 
   const addTodo = useCallback(
     (e) => {
@@ -36,39 +47,52 @@ export default function Page() {
     );
   }
 
-  const remainingTodos = todos.filter(t => !t.completed).length;
-  const completedTodos = todos.filter(t => t.completed).length;
+  const remainingTodos = todos.filter((t) => !t.completed).length;
+  const completedTodos = todos.filter((t) => t.completed).length;
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      background: 'linear-gradient(135deg, #667eea, #764ba2)',
-      padding: 20,
-      fontFamily: "'Inter', Arial, sans-serif"
-    }}>
-      <div style={{
-        background: 'rgba(255,255,255,0.2)',
-        backdropFilter: 'blur(15px)',
-        padding: 30,
-        borderRadius: 25,
-        width: '100%',
-        maxWidth: 500,
-        boxShadow: '0 15px 40px rgba(0,0,0,0.25)',
+    <main
+      style={{
+        minHeight: '100vh',
         display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}>
-        <h1 style={{ color: 'white', marginBottom: 10, textShadow: '2px 2px 8px rgba(0,0,0,0.4)' }}>
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        padding: 20,
+        fontFamily: "'Inter', Arial, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.2)',
+          backdropFilter: 'blur(15px)',
+          padding: 30,
+          borderRadius: 25,
+          width: '100%',
+          maxWidth: 500,
+          boxShadow: '0 15px 40px rgba(0,0,0,0.25)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <h1
+          style={{
+            color: 'white',
+            marginBottom: 10,
+            textShadow: '2px 2px 8px rgba(0,0,0,0.4)',
+          }}
+        >
           📝 Moja Lista Zadań
         </h1>
         <p style={{ color: 'white', marginBottom: 20 }}>
           {remainingTodos} pozostało | {completedTodos} ukończono
         </p>
 
-        <form onSubmit={addTodo} style={{ display: 'flex', gap: 10, width: '100%', marginBottom: 20 }}>
+        <form
+          onSubmit={addTodo}
+          style={{ display: 'flex', gap: 10, width: '100%', marginBottom: 20 }}
+        >
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -80,46 +104,68 @@ export default function Page() {
               border: '2px solid rgba(255,255,255,0.4)',
               background: 'rgba(255,255,255,0.15)',
               color: 'white',
-              outline: 'none'
+              outline: 'none',
             }}
           />
-          <button style={{
-            padding: '12px 20px',
-            borderRadius: 12,
-            border: 'none',
-            background: 'linear-gradient(45deg, #667eea, #764ba2)',
-            color: 'white',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-          }}>Dodaj</button>
+          <button
+            style={{
+              padding: '12px 20px',
+              borderRadius: 12,
+              border: 'none',
+              background: 'linear-gradient(45deg, #667eea, #764ba2)',
+              color: 'white',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+            }}
+          >
+            Dodaj
+          </button>
         </form>
 
-        <ul style={{ listStyle: 'none', width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <ul
+          style={{
+            listStyle: 'none',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}
+        >
           {todos.map((todo) => (
-            <li key={todo.id} style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: 15,
-              borderRadius: 12,
-              width: '100%',
-              background: todo.completed ? 'rgba(168,230,207,0.3)' : 'rgba(255,255,255,0.15)',
-              color: todo.completed ? '#e0ffe0' : 'white',
-              textDecoration: todo.completed ? 'line-through' : 'none',
-              cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s'
-            }}>
+            <li
+              key={todo.id}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: 15,
+                borderRadius: 12,
+                width: '100%',
+                background: todo.completed
+                  ? 'rgba(168,230,207,0.3)'
+                  : 'rgba(255,255,255,0.15)',
+                color: todo.completed ? '#e0ffe0' : 'white',
+                textDecoration: todo.completed ? 'line-through' : 'none',
+                cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+                transition: 'all 0.3s',
+              }}
+            >
               <span onClick={() => toggleTodo(todo.id)}>{todo.title}</span>
-              <button onClick={() => deleteTodo(todo.id)} style={{
-                padding: '6px 12px',
-                borderRadius: 8,
-                border: 'none',
-                background: 'linear-gradient(45deg, #ff6b6b, #ee5a52)',
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}>Usuń</button>
+              <button
+                onClick={() => deleteTodo(todo.id)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: 'linear-gradient(45deg, #ff6b6b, #ee5a52)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                Usuń
+              </button>
             </li>
           ))}
         </ul>
