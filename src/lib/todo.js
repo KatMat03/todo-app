@@ -1,12 +1,10 @@
 import { z } from 'zod';
-
 export const todoSchema = z.object({
   id: z.string(),
   title: z.string().min(1).max(200),
   completed: z.boolean(),
   createdAt: z.string(),
 });
-
 export function createTodo(title) {
   const todo = {
     id: crypto.randomUUID(),
@@ -15,8 +13,7 @@ export function createTodo(title) {
     createdAt: new Date().toLocaleDateString('pl-PL'),
   };
 
-  todoSchema.parse(todo); // walidacja
-
+  todoSchema.parse(todo);
   return todo;
 }
 

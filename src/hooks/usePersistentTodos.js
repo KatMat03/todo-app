@@ -1,4 +1,3 @@
-// src/hooks/usePersistentTodos.js - ZMIEŃ na to:
 import { useEffect, useReducer, useState } from 'react';
 import { todosReducer } from '@/lib/todo';
 

@@ -4,20 +4,13 @@ import { todosReducer } from '@/lib/todo';
 import { usePersistentTodosInitializer, useTodoPersistence } from '@/hooks/usePersistentTodos';
 
 export default function Page() {
-  // ✅ useReducer W page.js - SPEŁNIONE!
   const initializer = usePersistentTodosInitializer();
   const [todos, dispatch] = useReducer(todosReducer, [], initializer);
-
-  // ✅ Izolacja I/O
   useTodoPersistence(todos);
-
   const [input, setInput] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
-
   useEffect(() => setIsLoaded(true), []);
-
   if (!isLoaded) return <div>Ładowanie...</div>;
-
   const addTodo = useCallback(
     (e) => {
       e.preventDefault();
