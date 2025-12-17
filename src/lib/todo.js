@@ -1,4 +1,3 @@
-// lib/todo.js
 import { z } from 'zod';
 
 export const todoSchema = z.object({
@@ -9,12 +8,16 @@ export const todoSchema = z.object({
 });
 
 export function createTodo(title) {
-  return {
+  const todo = {
     id: crypto.randomUUID(),
     title,
     completed: false,
     createdAt: new Date().toLocaleDateString('pl-PL'),
   };
+
+  todoSchema.parse(todo); // walidacja
+
+  return todo;
 }
 
 export function todosReducer(state, action) {

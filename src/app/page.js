@@ -1,146 +1,131 @@
-// src/app/page.js
 'use client';
 
-import { useReducer, useEffect, useState, useCallback } from 'react';
-import { todosReducer } from '../../lib/todo.js';
+import { useState, useCallback } from 'react';
+import { usePersistentTodos } from '@/hooks/usePersistentTodos';
 
 export default function Page() {
-  const [state, dispatch] = useReducer(todosReducer, []);
+  const { todos, dispatch, isLoaded } = usePersistentTodos();
   const [input, setInput] = useState('');
-  const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('todos');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        dispatch({ type: 'INIT_TODOS', payload: parsed });
-      } catch (e) {
-        console.log('Błąd ładowania:', e);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
+  const addTodo = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (!input.trim()) return;
 
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('todos', JSON.stringify(state));
-    }
-  }, [state, isLoaded]);
+      dispatch({ type: 'ADD_TODO', payload: input.trim() });
+      setInput('');
+    },
+    [input, dispatch]
+  );
+
+  const toggleTodo = useCallback(
+    (id) => dispatch({ type: 'TOGGLE_TODO', payload: id }),
+    [dispatch]
+  );
+
+  const deleteTodo = useCallback(
+    (id) => dispatch({ type: 'DELETE_TODO', payload: id }),
+    [dispatch]
+  );
 
   if (!isLoaded) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <p style={{ color: 'white', fontSize: '1.2em' }}>Ładowanie...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p>Ładowanie...</p>
       </div>
     );
   }
 
-  const addTodo = useCallback((e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    dispatch({ type: 'ADD_TODO', payload: input.trim() });
-    setInput('');
-  }, [input]);
-
-  const toggleTodo = useCallback((id) => {
-    dispatch({ type: 'TOGGLE_TODO', payload: id });
-  }, []);
-
-  const deleteTodo = useCallback((id) => {
-    dispatch({ type: 'DELETE_TODO', payload: id });
-  }, []);
-
-  const remainingTodos = state.filter(t => !t.completed).length;
-  const completedTodos = state.filter(t => t.completed).length;
+  const remainingTodos = todos.filter(t => !t.completed).length;
+  const completedTodos = todos.filter(t => t.completed).length;
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '20px',
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    <main style={{
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      background: 'linear-gradient(135deg, #667eea, #764ba2)',
+      padding: 20,
+      fontFamily: "'Inter', Arial, sans-serif"
+    }}>
+      <div style={{
+        background: 'rgba(255,255,255,0.2)',
+        backdropFilter: 'blur(15px)',
+        padding: 30,
+        borderRadius: 25,
+        width: '100%',
+        maxWidth: 500,
+        boxShadow: '0 15px 40px rgba(0,0,0,0.25)',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 600,
-          width: '100%',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: 25,
-          boxShadow: '0 25px 50px rgba(0,0,0,0.2)',
-          padding: '40px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 5,
-            background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24)',
-          }}
-        />
-        <h1 style={{ textAlign: 'center', color: '#333', fontSize: '2.5em', marginBottom: 10, fontWeight: 700, textShadow: '2px 2px 4px rgba(0,0,0,0.1)' }}>
-          📝 Moja Lista Zadań 📝
+        flexDirection: 'column',
+        alignItems: 'center'
+      }}>
+        <h1 style={{ color: 'white', marginBottom: 10, textShadow: '2px 2px 8px rgba(0,0,0,0.4)' }}>
+          📝 Moja Lista Zadań
         </h1>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: 30, fontSize: '1.1em' }}>
+        <p style={{ color: 'white', marginBottom: 20 }}>
           {remainingTodos} pozostało | {completedTodos} ukończono
         </p>
-        <form onSubmit={addTodo} style={{ display: 'flex', gap: 15, marginBottom: 30, background: '#f8f9fa', padding: 20, borderRadius: 20, boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.05)' }}>
+
+        <form onSubmit={addTodo} style={{ display: 'flex', gap: 10, width: '100%', marginBottom: 20 }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="💡 Co chcesz zrobić dzisiaj?"
+            placeholder="Co chcesz zrobić?"
             style={{
               flex: 1,
-              padding: '18px 25px',
-              border: '2px solid #e9ecef',
-              borderRadius: 15,
-              fontSize: 18,
-              background: '#ffffff',
-              color: '#000000',
-              outline: 'none',
+              padding: 12,
+              borderRadius: 12,
+              border: '2px solid rgba(255,255,255,0.4)',
+              background: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              outline: 'none'
             }}
           />
-          <button type="submit" style={{ padding: '18px 30px', background: 'linear-gradient(45deg, #667eea, #764ba2)', color: 'white', border: 'none', borderRadius: 15, fontSize: 16, fontWeight: 600 }}>
-            ➕ Dodaj
-          </button>
+          <button style={{
+            padding: '12px 20px',
+            borderRadius: 12,
+            border: 'none',
+            background: 'linear-gradient(45deg, #667eea, #764ba2)',
+            color: 'white',
+            fontWeight: 'bold',
+            cursor: 'pointer'
+          }}>Dodaj</button>
         </form>
 
-        <div style={{ maxHeight: 500, overflowY: 'auto' }}>
-          {state.map((todo) => (
-            <div key={todo.id} style={{ display: 'flex', alignItems: 'center', padding: '20px', marginBottom: 15, background: todo.completed ? 'linear-gradient(135deg, #a8e6cf, #88d8a3)' : 'white', borderRadius: 20, boxShadow: '0 8px 25px rgba(0,0,0,0.1)' }}>
-              <div onClick={() => toggleTodo(todo.id)} style={{ width: 24, height: 24, borderRadius: '50%', border: '3px solid', borderColor: todo.completed ? '#27ae60' : '#ddd', background: todo.completed ? '#27ae60' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 20, cursor: 'pointer' }}>
-                {todo.completed && <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>}
-              </div>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: 18, fontWeight: 500, color: todo.completed ? '#2d7748' : '#333', textDecoration: todo.completed ? 'line-through' : 'none' }}>
-                  {todo.title}
-                </span>
-                <div style={{ fontSize: 12, color: '#888', marginTop: 5 }}>Dodano: {todo.createdAt}</div>
-              </div>
-              <button onClick={() => deleteTodo(todo.id)} style={{ padding: '10px 20px', background: 'linear-gradient(45deg, #ff6b6b, #ee5a52)', color: 'white', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 600 }}>
-                🗑️ Usuń
-              </button>
-            </div>
+        <ul style={{ listStyle: 'none', width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {todos.map((todo) => (
+            <li key={todo.id} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: 15,
+              borderRadius: 12,
+              width: '100%',
+              background: todo.completed ? 'rgba(168,230,207,0.3)' : 'rgba(255,255,255,0.15)',
+              color: todo.completed ? '#e0ffe0' : 'white',
+              textDecoration: todo.completed ? 'line-through' : 'none',
+              cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s'
+            }}>
+              <span onClick={() => toggleTodo(todo.id)}>{todo.title}</span>
+              <button onClick={() => deleteTodo(todo.id)} style={{
+                padding: '6px 12px',
+                borderRadius: 8,
+                border: 'none',
+                background: 'linear-gradient(45deg, #ff6b6b, #ee5a52)',
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}>Usuń</button>
+            </li>
           ))}
-        </div>
+        </ul>
 
-        {state.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
-            <div style={{ fontSize: '4em', marginBottom: 20 }}>✨</div>
-            <h3>Brak zadań</h3>
-            <p>Dodaj pierwsze zadanie używając pola powyżej!</p>
-          </div>
+        {todos.length === 0 && (
+          <p style={{ marginTop: 20, color: 'white', opacity: 0.8 }}>Brak zadań</p>
         )}
       </div>
     </main>
